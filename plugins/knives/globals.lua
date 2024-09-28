@@ -1,0 +1,2 @@
+KnivesData = {}
+KnifeWeaponIdx = {}
