@@ -3,8 +3,7 @@ function LoadKnivesPlayerData(player)
     if player:IsFakeClient() then return end
     if not db:IsConnected() then return end
 
-    db:QueryParams("select * from knives where steamid = '@steamid' limit 1", { steamid = player:GetSteamID() },
-        function(err, result)
+    db:QueryBuilder():Table("knives"):Select({}):Where("steamid", "=", tostring(player:GetSteamID())):Limit(1):Execute(function (err, result)
             if #err > 0 then
                 return print("ERROR: " .. err)
             end
@@ -13,6 +12,20 @@ function LoadKnivesPlayerData(player)
                 player:SetVar("knives.t", "")
                 player:SetVar("knives.ct", "")
                 player:SetVar("knives.data", "{}")
+
+                local params = {
+                    steamid = tostring(player:GetSteamID()),
+                    t = "",
+                    ct = "",
+                    knives_data = "{}"
+                }
+
+                db:QueryBuilder():Table("knives"):Insert(params):OnDuplicate(params):Execute(function (err, result)
+                    if #err > 0 then
+                        print("ERROR: " .. err)
+                    end
+                end)
+
             else
                 player:SetVar("knives.t", result[1].t)
                 player:SetVar("knives.ct", result[1].ct)
@@ -40,24 +53,15 @@ function UpdatePlayerKnives(player, team, knifeidx)
 
     player:SetVar("knives." .. team, knifeidx)
 
-    local params = {
-        steamid = player:GetSteamID(),
-        t = "",
-        ct = "",
-    }
-
-    db:QueryParams(
-        "insert ignore into knives (steamid, t, ct, knives_data) values ('@steamid', '@t', '@ct', '{}')",
-        params
-    )
-
     params = {
-        steamid = player:GetSteamID(),
-        team = team,
-        knifeidx = knifeidx
+        [team] = knifeidx,
     }
 
-    db:QueryParams("update knives set `@team` = '@knifeidx' where `steamid` = '@steamid' limit 1", params)
+    db:QueryBuilder():Table("knives"):Update(params):Where("steamid", "=", tostring(player:GetSteamID())):Limit(1):Execute(function (err, result)
+        if #err > 0 then
+            print("ERROR: " .. err)
+        end
+    end)
 end
 
 --- @param player Player
@@ -88,13 +92,12 @@ function UpdatePlayerKnivesData(player, knifeidx, field, value)
 
     player:SetVar("knives.data", json.encode(knivesData))
 
-    db:QueryParams(
-        "insert ignore into knives (steamid, t, ct, knives_data) values ('@steamid', '', '', '{}')",
-        { steamid = player:GetSteamID() }
-    )
+    db:QueryBuilder():Table("knives"):Update({knives_data = json.encode(knivesData)}):Where("steamid", "=", tostring(player:GetSteamID())):Limit(1):Execute(function (err, result)
+        if #err > 0 then
+            print("Error: " .. err)
+        end
+    end)
 
-    db:QueryParams("update knives set knives_data = '@knivesdata' where steamid = '@steamid' limit 1",
-        { knivesdata = json.encode(knivesData), steamid = player:GetSteamID() })
 end
 
 --- @param weapon CBasePlayerWeapon

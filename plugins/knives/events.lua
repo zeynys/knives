@@ -2,9 +2,16 @@ AddEventHandler("OnPluginStart", function(event)
     db = Database("knives")
     if not db:IsConnected() then return end
 
-    db:Query(
-        "CREATE TABLE `knives` (`steamid` VARCHAR(64) NOT NULL , `t` VARCHAR(64) NOT NULL , `ct` VARCHAR(64) NOT NULL , `knives_data` JSON NOT NULL DEFAULT '{}' , UNIQUE (`steamid`)) ENGINE = InnoDB;"
-    )
+    db:QueryBuilder():Table("knives"):Create({
+        steamid = "string|max:128|unique",
+        t = "string|max:128|unique",
+        ct = "string|max:128|unique",
+        knives_data = "json|default:{}"
+    }):Execute(function (err, result)
+        if #err > 0 then
+            print("ERROR: " .. err)
+        end
+    end)
 
     local jsonData = json.decode(files:Read(GetPluginPath(GetCurrentPluginName()) .. "/data/skins.json"))
     if not jsonData then return end
