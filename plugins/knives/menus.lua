@@ -120,6 +120,8 @@ commands:Register("knife_equip", function(playerid, args, argc, silent, prefix)
                 FetchTranslation("knives.menu." .. team)))
     end
 
+    UpdatePlayerKnife(player)
+
     player:ExecuteCommand("sw_knife_equipfor \"" .. knifeid .. "\"")
 end)
 
