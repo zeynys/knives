@@ -101,10 +101,11 @@ end)
 
 AddEventHandler("OnEntityCreated", function(event, entityptr)
     local designername = CEntityInstance(entityptr).Entity.DesignerName
+    local ent = CEntityInstance(entityptr)
 
     if designername == "weapon_knife" then
         NextTick(function()
-            local ownerentity = CBaseEntity(entityptr).OwnerEntity
+            local ownerentity = CBaseEntity(ent).OwnerEntity
             if not ownerentity:IsValid() then return end
             local originalcontroller = CCSPlayerPawnBase(ownerentity:ToPtr()).OriginalController
             if not originalcontroller:IsValid() then return end
@@ -124,7 +125,7 @@ AddEventHandler("OnEntityCreated", function(event, entityptr)
                 local wear = (playerdata.data[knifeid] or { wear = 0.0 }).wear
                 local nametag = (playerdata.data[knifeid] or { nametag = "" }).nametag
 
-                GiveWeaponSkin(CBasePlayerWeapon(entityptr), paint_index, seed, wear, nametag)
+                GiveWeaponSkin(CBasePlayerWeapon(ent), paint_index, seed, wear, nametag)
             end
         end)
     end
